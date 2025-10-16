@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
-
 import numpy as np
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
@@ -72,7 +70,7 @@ class PDFProcessor:
             text = re.sub(r'\s+', ' ', text).strip()
             words = text.split()
             filtered_words = [self.lemmatizer.lemmatize(word) for word in words 
-                             if word not in self.stop_words and len(word) > 2]
+                              if word not in self.stop_words and len(word) > 2]
             return ' '.join(filtered_words)
         except Exception as e:
             return ""
@@ -84,8 +82,9 @@ class PDFProcessor:
         return processed_df
 
 class MarutiQueryBot:
-    def __init__(self, df):
+    def __init__(self, df, processor: PDFProcessor):
         self.df = df
+        self.processor = processor
         self.vectorizer = TfidfVectorizer(
             max_features=1000, 
             stop_words='english',
@@ -110,7 +109,7 @@ class MarutiQueryBot:
                     for sentence in sentences:
                         clean_sentence = sentence.strip()
                         if len(clean_sentence) > 15:
-                            processed_sentence = self.preprocess_query(clean_sentence)
+                            processed_sentence = self.processor.preprocess_text(clean_sentence)
                             if len(processed_sentence) > 5:
                                 self.sentences.append(processed_sentence)
                                 self.original_sentences.append(clean_sentence)
@@ -130,30 +129,12 @@ class MarutiQueryBot:
             self.tfidf_matrix = None
             st.warning("No meaningful text found in the PDF")
     
-    def preprocess_query(self, text):
-        """Preprocess query text"""
-        if pd.isna(text) or text == "":
-            return ""
-        
-        try:
-            text = str(text).lower()
-            text = re.sub(r'[^\w\s\.\%]', ' ', text)
-            text = re.sub(r'\s+', ' ', text).strip()
-            words = text.split()
-            lemmatizer = WordNetLemmatizer()
-            stop_words = set(stopwords.words('english'))
-            filtered_words = [lemmatizer.lemmatize(word) for word in words 
-                             if word not in stop_words and len(word) > 2]
-            return ' '.join(filtered_words)
-        except Exception as e:
-            return ""
-    
     def get_response(self, query, top_k=5):
         """Get response for user query"""
         if self.tfidf_matrix is None or len(self.sentences) == 0:
             return []
         
-        processed_query = self.preprocess_query(query)
+        processed_query = self.processor.preprocess_text(query)
         
         if not processed_query:
             return []
@@ -526,7 +507,7 @@ def main():
                 
                 if df is not None and not df.empty:
                     processed_df = processor.process_dataframe(df)
-                    st.session_state.chatbot = MarutiQueryBot(processed_df)
+                    st.session_state.chatbot = MarutiQueryBot(processed_df, processor)
                     st.session_state.pdf_processed = True
                     st.session_state.df = processed_df
                     
@@ -669,5 +650,4 @@ def main():
         """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-
     main()
