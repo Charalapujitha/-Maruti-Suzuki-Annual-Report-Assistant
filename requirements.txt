@@ -1,1 +1,7 @@
-scikit-learn
+streamlit==1.39.0
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.2
+nltk==3.9.1
+PyMuPDF==1.24.10
+regex==2024.9.11
