@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
+
 import numpy as np
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
@@ -667,4 +669,5 @@ def main():
         """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
+
     main()
